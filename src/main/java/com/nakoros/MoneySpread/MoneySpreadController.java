@@ -25,22 +25,25 @@ public class MoneySpreadController {
 	}
 
 	@PostMapping("/recieve")
-	public int moneyRecieve(HttpServletRequest request, HttpServletResponse response,
+	public int moneyReceive(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam("token") String token) {
 		int recvMoney = 0;
 		try {
 			String userId = request.getHeader("X-USER-ID");
 			String roomId = request.getHeader("X-ROOM-ID");
-			RecdCond cond = MoneySplashManager.isRecieveCond(token, userId, roomId);
+			RecdCond cond = MoneySplashManager.isReceiveCond(token, userId, roomId);
 			switch (cond) {
 			case OK:
-				recvMoney = MoneySplashManager.recieveMoney(token, userId);
+				recvMoney = MoneySplashManager.receiveMoney(token, userId);
 				break;
-			case RECIEVED:
+			case RECEIVED:
 				response.sendError(HttpServletResponse.SC_FORBIDDEN, "This user has already received.");
 				break;
 			case NOT_EXIST:
 				response.sendError(HttpServletResponse.SC_NOT_FOUND, "This token has expired or is invalid.");
+				break;
+			case IS_OWNER:
+				response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, "Token owners are not receive.");
 				break;
 			}
 		} catch (IOException e) {
@@ -52,17 +55,12 @@ public class MoneySpreadController {
 	@GetMapping("/splash")
 	public Map<String, Object> getSplashInfo(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam("token") String token) {
-		Map<String, Object> returnMap = MoneySplashManager.getSplashInfo(token);
+		String userId = request.getHeader("X-USER-ID");
+		Map<String, Object> returnMap = MoneySplashManager.getSplashInfo(token,userId);
 		try {
-			String userId = request.getHeader("X-USER-ID");
-			if (userId.equals(returnMap.get("owner"))) {
-				returnMap.remove("owner");
-			} else {
-				if (returnMap.isEmpty()) {// 데이터가 없을때 (7일 지남 or 잘못된 token)
-					response.sendError(HttpServletResponse.SC_NOT_FOUND, "There is no data for the token.");
-				} else {// 뿌린사람 아닐때
-					response.sendError(HttpServletResponse.SC_FORBIDDEN, "The user is not a token owner.");
-				}
+			String reason=(String)returnMap.get("reason");
+			if (reason!=null) {
+				response.sendError(HttpServletResponse.SC_NOT_FOUND, "The token is invalid or is not owner of token.");
 				return new HashMap<String, Object>();
 			}
 		} catch (IOException e) {

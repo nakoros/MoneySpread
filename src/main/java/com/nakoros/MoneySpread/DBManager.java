@@ -16,11 +16,20 @@ public class DBManager {
 
 	private static final String USER_NAME = "root"; // DB에 접속할 사용자 이름을 상수로 정의
 	private static final String PASSWORD = "root123"; // 사용자의 비밀번호를 상수로 정의
-
+	private static DBManager instance=null;
+	public static DBManager getInstance() {
+		if(instance==null) {
+			instance=new DBManager();
+		}
+		return instance;
+	}
 	public DBManager() {
 	}
+	public DBManager(DBManager obj) {
+		instance=obj;
+	}
 
-	public static boolean executeUpdate(String query) {
+	public boolean executeUpdate(String query) {
 		Connection conn = null;
 		Statement state = null;
 		int res=0;
@@ -62,11 +71,11 @@ public class DBManager {
 
 	}
 
-	public static SQLResult executeQuery(String query) {
+	public  SQLResult executeQuery(String query) {
 		return executeQuery(query, false);
 	}
 
-	public static SQLResult executeQuery(String query, boolean printResult) {
+	public SQLResult executeQuery(String query, boolean printResult) {
 		SQLResult res = new SQLResult();
 		Connection conn = null;
 		Statement state = null;
@@ -140,8 +149,9 @@ public class DBManager {
 
 	public static void main(String[] args) {
 //		String query ="INSERT INTO t_test VALUES('abX', 'nakoros', 'hell', now(), 100);";
-		String query ="update t_test2 set reciever='user0' where token='abc' ;";
-		DBManager.executeUpdate(query);
+//		String query ="update t_test2 set reciever='user0' where token='abc' ;";
+//		DBManager db=new DBManager();
+//		db.executeUpdate(query);
 //		String query = "SELECT * FROM t_test where token='aaa'";
 //		SQLResult res=DBManager.executeQuery(query, true);
 //		System.out.println(res.result);
