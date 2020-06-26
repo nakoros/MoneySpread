@@ -15,6 +15,9 @@ public class MoneySpreadControllerTest {
 
 	@Mock
 	DBManager db = mock(DBManager.class);
+	
+	MoneySplashManager mng=new MoneySplashManager();
+	
 	@Before
 	public void before() {
 		new DBManager(db);
@@ -46,7 +49,7 @@ public class MoneySpreadControllerTest {
 				+ "' AND ISNULL(receiver) AND id=" + "1";
 		when(db.executeUpdate(query)).thenReturn(true);
 		
-		int actual=MoneySplashManager.receiveMoney(testToken, testUserId);
+		int actual=mng.receiveMoney(testToken, testUserId);
 		assertEquals(666, actual);
 	}
 
@@ -74,7 +77,7 @@ public class MoneySpreadControllerTest {
 		res2.count = 1;
 		when(db.executeQuery(query)).thenReturn(res2);
 		
-		RecdCond actual=MoneySplashManager.isReceiveCond(testToken, testUserId, testRoomId);
+		RecdCond actual=mng.isReceiveCond(testToken, testUserId, testRoomId);
 		assertEquals(RecdCond.RECEIVED, actual);
 	}
 
@@ -97,7 +100,7 @@ public class MoneySpreadControllerTest {
 		when(db.executeQuery(query)).thenReturn(res);
 		
 		
-		RecdCond actual=MoneySplashManager.isReceiveCond(testToken, testUserId, testRoomId);
+		RecdCond actual=mng.isReceiveCond(testToken, testUserId, testRoomId);
 		assertEquals(RecdCond.IS_OWNER, actual);
 	}
 
@@ -114,7 +117,7 @@ public class MoneySpreadControllerTest {
 				+ "' AND time> ADDTIME(now(),'-00:10:00)'";
 		when(db.executeQuery(query)).thenReturn(res);
 		
-		RecdCond actual=MoneySplashManager.isReceiveCond(testToken, testUserId, testRoomId);
+		RecdCond actual=mng.isReceiveCond(testToken, testUserId, testRoomId);
 		assertEquals(RecdCond.NOT_EXIST, actual);
 	}
 
@@ -148,7 +151,7 @@ public class MoneySpreadControllerTest {
 		query = "SELECT * FROM t_receive_info WHERE token='"+testToken+"' AND !ISNULL(receiver)";
 		when(db.executeQuery(query)).thenReturn(res2);
 		
-		Map<String,Object> actualMap=MoneySplashManager.getSplashInfo(testToken, testUserId);
+		Map<String,Object> actualMap=mng.getSplashInfo(testToken, testUserId);
 		//다른 정보는 mock이기 때문에 remain_money가 정상 계산되는지만 확인.
 		assertEquals(1000-666, (int)actualMap.get("remain_money"));
 	}
@@ -163,7 +166,7 @@ public class MoneySpreadControllerTest {
 		String query = "SELECT * FROM t_splash WHERE token='"+testToken+"' AND owner='"+testUserId+"'";
 		when(db.executeQuery(query)).thenReturn(res);
 		
-		Map<String,Object> actualMap=MoneySplashManager.getSplashInfo(testToken, testUserId);
+		Map<String,Object> actualMap=mng.getSplashInfo(testToken, testUserId);
 		assertEquals("NO_DATA", actualMap.get("reason"));
 	}
 

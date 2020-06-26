@@ -7,11 +7,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
 enum RecdCond { OK, RECEIVED, NOT_EXIST, IS_OWNER }
 
-
+@Component
 public class MoneySplashManager {
-	public static String executeSplash(String userId, String roomId, int totalMoney, int personnel) {
+	public String executeSplash(String userId, String roomId, int totalMoney, int personnel) {
 		// 토큰 생성 & DB저장 토큰, 뿌린 사람, 뿌린 방, 뿌린 시각, 뿌린 금액
 		boolean success = false;
 		String token = null;
@@ -44,7 +47,7 @@ public class MoneySplashManager {
 		return token;
 	}
 
-	public static RecdCond isReceiveCond(String token, String userId, String roomId) {
+	public RecdCond isReceiveCond(String token, String userId, String roomId) {
 		String query = "SELECT * FROM t_splash " + "WHERE token'" + token + "' AND room='" + roomId
 				+ "' AND time> ADDTIME(now(),'-00:10:00)'";
 
@@ -64,7 +67,7 @@ public class MoneySplashManager {
 		return RecdCond.NOT_EXIST;
 	}
 
-	public static int receiveMoney(String token, String userId) {
+	public int receiveMoney(String token, String userId) {
 		// 받기
 		try {
 			while (true) {
@@ -93,7 +96,7 @@ public class MoneySplashManager {
 		return 0;
 	}
 		
-	public static Map<String,Object> getSplashInfo(String token, String userId) {
+	public Map<String,Object> getSplashInfo(String token, String userId) {
 		Map<String, Object> resMap=new HashMap<String, Object>();
 		String query = "SELECT * FROM t_splash WHERE token='"+token+"' AND owner='"+userId+"'";
 		SQLResult res=DBManager.getInstance().executeQuery(query);
@@ -121,7 +124,7 @@ public class MoneySplashManager {
 		}
 		return resMap;
 	}
-	public static List<Map<String,Object>> getReceiveInfo(String token){
+	public List<Map<String,Object>> getReceiveInfo(String token){
 		List<Map<String,Object>> resList=new ArrayList<Map<String,Object>>();
 		String query = "SELECT * FROM t_receive_info WHERE token='"+token+"' AND !ISNULL(receiver)";
 		SQLResult res=DBManager.getInstance().executeQuery(query);
@@ -140,7 +143,7 @@ public class MoneySplashManager {
 		
 		return resList;
 	}
-	private static String generateToken() {
+	private String generateToken() {
 		StringBuffer temp = new StringBuffer();
 		Random rnd = new Random();
 		for (int i = 0; i < 3; i++) {
@@ -162,8 +165,10 @@ public class MoneySplashManager {
 		}
 		return temp.toString();
 	}
+	
 	//scheduled function
-	public static void deleteExpiredData() {
+	@Scheduled(cron="0 2 * * * *")
+	public void deleteExpiredData() {
 		String query="DELETE FROM t_splash WHERE time<ADDTIME(now(), '-07 00:00:00')";
 		DBManager.getInstance().executeUpdate(query);
 	}
